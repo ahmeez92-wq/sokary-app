@@ -1,0 +1,8 @@
+{
+  "name": "سكري",
+  "short_name": "سكري",
+  "start_url": "./home.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6"
+}
