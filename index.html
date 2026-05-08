@@ -1,489 +1,85 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>سُكري - ملف طبي متكامل</title>
-  <meta name="theme-color" content="#0ea5e9">
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-    body { margin: 0; background: #f0f9ff; padding: 16px; padding-bottom: 80px; }
-    .card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    h1 { text-align: center; color: #0284c7; margin: 0 0 20px 0; }
-    h2 { color: #0369a1; font-size: 18px; margin: 0 0 12px 0; }
-    h3 { color: #0c4a6e; font-size: 16px; margin: 12px 0 8px 0; }
-    input, select, button, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #bae6fd; border-radius: 8px; font-size: 16px; }
-    button { background: #0ea5e9; color: white; border: none; font-weight: bold; cursor: pointer; }
-    .btn-type { background: #f1f5f9; color: #0f172a; border: 2px solid #e2e8f0; margin: 4px 0; }
-    .btn-type.active { background: #0ea5e9; color: white; border-color: #0ea5e9; }
-    .reading { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #e0f2fe; }
-    .high { color: #dc2626; font-weight: bold; }
-    .low { color: #ea580c; font-weight: bold; }
-    .normal { color: #16a34a; font-weight: bold; }
-    .delete { background: #ef4444; padding: 4px 8px; font-size: 12px; width: auto; }
-    .badge { display: inline-block; background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 20px; font-size: 12px; margin: 4px; }
-    .hidden { display: none; }
-    .tip { background: #fefce8; border: 1px solid #fde047; padding: 12px; border-radius: 8px; font-size: 14px; margin-top: 12px; }
-    .profile { background: #ecfeff; border: 1px solid #a5f3fc; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
-    .btn-secondary { background: #64748b; }
-    .btn-success { background: #16a34a; }
-    .tabs { display: flex; gap: 8px; margin-bottom: 16px; position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 12px; box-shadow: 0 -2px 8px rgba(0,0,0,0.1); z-index: 100; }
-    .tab { flex: 1; padding: 10px; background: #f1f5f9; border: none; border-radius: 8px; font-weight: bold; color: #64748b; font-size: 12px; }
-    .tab.active { background: #0ea5e9; color: white; }
-    .recipe { border: 1px solid #e0f2fe; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
-    .recipe-tag { display: inline-block; background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 12px; font-size: 11px; margin: 4px 4px 4px 0; }
-    .carb { background: #fef3c7; color: #92400e; }
-    .insulin { background: #fce7f3; color: #9d174d; }
-    .macro { background: #f1f5f9; padding: 8px; border-radius: 8px; font-size: 12px; }
-    .macro-val { font-weight: bold; font-size: 14px; color: #0f172a; }
-    .section { border-top: 1px solid #e2e8f0; margin-top: 16px; padding-top: 16px; }
-    label { font-size: 14px; font-weight: bold; color: #334155; margin-top: 8px; display: block; }
-    .insulin-dose { background: #fdf4ff; border: 1px solid #f0abfc; padding: 8px; border-radius: 8px; font-size: 13px; margin-top: 8px; }
-    canvas { max-height: 300px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سكري - تسجيل البيانات</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>📊 سُكري</h1>
-
-  <!-- شاشة التسجيل أول مرة -->
-  <div id="onboarding" class="card">
-    <h2>أهلاً بيك 👋 اعمل ملفك الطبي</h2>
-    <input type="text" id="name" placeholder="الاسم بالكامل">
-    <div class="grid-2">
-      <input type="number" id="age" placeholder="السن" inputmode="numeric">
-      <input type="number" id="weight" placeholder="الوزن كجم" inputmode="numeric">
-    </div>
-    <input type="number" id="a1c" placeholder="التراكمي HbA1c % - لو تعرفه" inputmode="decimal" step="0.1">
-    <input type="date" id="diagnosisDate" placeholder="تاريخ التشخيص">
-    
-    <div class="section">
-      <label>نوع السكر:</label>
-      <button class="btn-type" onclick="setDiabetesType(1)">نوع أول - معتمد على الأنسولين</button>
-      <button class="btn-type" onclick="setDiabetesType(2)">نوع تاني - أقراص أو نظام غذائي</button>
-    </div>
-
-    <div id="insulinSection" class="section hidden">
-      <label>نوع الأنسولين اللي بتستخدمه:</label>
-      <select id="insulinType">
-        <option value="">اختار نوع الأنسولين</option>
-        <option value="سريع">سريع المفعول - نوفورابيد/هيومالوج</option>
-        <option value="طويل">طويل المفعول - لانتوس/تريسيبا</option>
-        <option value="مخلوط">مخلوط - ميكستارد/نوفوميكس</option>
-        <option value="مضخة">مضخة أنسولين</option>
-        <option value="أقراص">أقراص بس - مفيش أنسولين</option>
-      </select>
-      
-      <div class="grid-2">
-        <input type="text" id="basalDose" placeholder="جرعة القاعدي - وحدات">
-        <input type="text" id="carbRatio" placeholder="معامل الكارب 1:X">
-      </div>
-      <p style="font-size:12px;color:#64748b">مثال: لو بتاخد وحدة لكل 10 جرام كارب اكتب 10</p>
-    </div>
-    
-    <button onclick="saveProfile()" style="margin-top:16px">حفظ الملف وابدأ</button>
-  </div>
-
-  <!-- التطبيق الأساسي -->
-  <div id="mainApp" class="hidden">
-    
-    <!-- تبويب القياسات -->
-    <div id="tab-readings">
-      <div class="card profile">
-        <h2>ملف المريض</h2>
-        <div id="profileData"></div>
-        <button class="btn-secondary" onclick="editProfile()" style="margin-top:8px; font-size:14px; padding:8px">تعديل البيانات</button>
-      </div>
-
-      <div class="card">
-        <h2>تسجيل قياس + جرعة</h2>
-        <div class="grid-2">
-          <input type="number" id="glucose" placeholder="قياس السكر mg/dL" inputmode="numeric">
-          <input type="number" id="insulinDose" placeholder="جرعة الأنسولين - وحدات" inputmode="numeric">
-        </div>
-        <select id="mealType">
-          <option value="صايم">صايم 8 ساعات</option>
-          <option value="قبل الأكل">قبل الأكل</option>
-          <option value="بعد الأكل بساعتين">بعد الأكل بساعتين</option>
-          <option value="قبل النوم">قبل النوم</option>
-          <option value="الفجر">الفجر 3 ص</option>
-          <option value="عشوائي">عشوائي</option>
-        </select>
-        <input type="text" id="notes" placeholder="الأكل، الدوا، مجهود...">
-        <button onclick="addReading()">حفظ القياس</button>
-        <div id="tip" class="tip hidden"></div>
-      </div>
-
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center">
-          <h2>آخر القياسات</h2>
-          <button class="btn-success" onclick="exportToExcel()" style="width:auto; padding:8px 16px; font-size:14px">تصدير للطبيب 📊</button>
-        </div>
-        <div id="readings"></div>
-      </div>
-    </div>
-
-    <!-- تبويب الرسم البياني -->
-    <div id="tab-chart" class="hidden">
-      <div class="card">
-        <h2>📈 منحنى السكر آخر 7 أيام</h2>
-        <canvas id="sugarChart"></canvas>
-        <div id="chartStats" style="margin-top:16px; font-size:14px;"></div>
-      </div>
-    </div>
-
-    <!-- تبويب الوصفات -->
-    <div id="tab-recipes" class="hidden">
-      <div class="card">
-        <h2>🍽️ وصفات محسوبة بالظبط</h2>
-        <p style="font-size:14px;color:#64748b">وصفات بالسعرات والكارب ومناسبة لنوع الأنسولين بتاعك</p>
-        <div id="recipesList"></div>
-      </div>
-    </div>
-
-  <!-- الأزرار تحت -->
-  <div class="tabs hidden" id="navTabs">
-    <button class="tab active" onclick="switchTab('readings')">📊 قياسات</button>
-    <button class="tab" onclick="switchTab('chart')">📈 رسم</button>
-    <button class="tab" onclick="switchTab('recipes')">🍽️ وصفات</button>
-  </div>
-
-  <script>
-    let profile = {};
-    let sugarChart = null;
-    
-    const recipes = [
-      {
-        name: 'شوفان بالزبادي والتوت',
-        type: 'فطار',
-        calories: 280,
-        carbs: 32,
-        protein: 15,
-        fat: 8,
-        gi: 'واطي',
-        forType: 'both',
-        insulinNote: 'سريع المفعول: خد الجرعة قبل الأكل بـ 15 دقيقة. 32جم كارب',
-        ingredients: '3 ملاعق شوفان، علبة زبادي لايت، نص كوب توت، ملعقة بذور شيا',
-        tip: 'الشوفان بيتاهضم ببطء ومبيرفعش السكر فجأة. التوت مضاد أكسدة'
-      },
-      {
-        name: 'صدر فرخة + سلطة + 4 ملاعق رز بني',
-        type: 'غدا',
-        calories: 420,
-        carbs: 35,
-        protein: 45,
-        fat: 10,
-        gi: 'متوسط',
-        forType: 'both',
-        insulinNote: 'احسب 35 جم كارب. لو معامل الكارب 1:10 يبقى 3.5 وحدة',
-        ingredients: '150 جم صدر فرخة، خضار سلطة، 4 ملاعق رز بني مسلوق',
-        tip: 'الرز البني أليافه أعلى. البروتين بيبطئ امتصاص الكارب'
-      },
-      {
-        name: 'بيض + أفوكادو + توست أسمر',
-        type: 'فطار',
-        calories: 310,
-        carbs: 18,
-        protein: 16,
-        fat: 20,
-        gi: 'واطي',
-        forType: '2',
-        insulinNote: 'مناسب للنوع التاني. نوع أول: احسب 18 جم كارب',
-        ingredients: '2 بيضة مسلوقة، نص أفوكادو، شريحة توست أسمر',
-        tip: 'الأفوكادو دهون صحية بتخليك شبعان ومترفعش السكر'
-      },
-      {
-        name: 'تونة + حمص + خيار',
-        type: 'عشا',
-        calories: 250,
-        carbs: 12,
-        protein: 28,
-        fat: 9,
-        gi: 'واطي جداً',
-        forType: 'both',
-        insulinNote: 'كارب قليل جداً. ممكن متحتاجش جرعة لو سكرك مظبوط',
-        ingredients: 'علبة تونة مصفاة، 3 ملاعق حمص مسلوق، خيار وطماطم',
-        tip: 'وجبة عشا مثالية. بروتين عالي وكارب قليل عشان متصحاش بسكر عالي'
-      },
-      {
-        name: 'عدس بني + سلطة',
-        type: 'غدا',
-        calories: 340,
-        carbs: 45,
-        protein: 18,
-        fat: 6,
-        gi: 'واطي',
-        forType: '2',
-        insulinNote: 'نوع أول: 45 جم كارب بس المؤشر واطي فالارتفاع بطيء',
-        ingredients: 'كوب عدس مطبوخ، سلطة خضرا، ليمون وكمون',
-        tip: 'العدس بروتين نباتي وألياف. بيشبع ومبيرفعش السكر بسرعة'
-      }
-    ];
-
-    function checkOnboarding() {
-      const savedProfile = localStorage.getItem('diabetesProfile');
-      if (savedProfile) {
-        profile = JSON.parse(savedProfile);
-        document.getElementById('onboarding').classList.add('hidden');
-        document.getElementById('mainApp').classList.remove('hidden');
-        document.getElementById('navTabs').classList.remove('hidden');
-        showProfile();
-        showReadings();
-        showRecipes();
-        updateChart();
-      }
-    }
-
-    function setDiabetesType(type) {
-      profile.diabetesType = type.toString();
-      document.querySelectorAll('.btn-type').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
-      
-      if (type === 1) {
-        document.getElementById('insulinSection').classList.remove('hidden');
-      } else {
-        document.getElementById('insulinSection').classList.add('hidden');
-      }
-    }
-
-    function saveProfile() {
-      profile.name = document.getElementById('name').value;
-      profile.age = document.getElementById('age').value;
-      profile.weight = document.getElementById('weight').value;
-      profile.a1c = document.getElementById('a1c').value;
-      profile.diagnosisDate = document.getElementById('diagnosisDate').value;
-      profile.insulinType = document.getElementById('insulinType').value;
-      profile.basalDose = document.getElementById('basalDose').value;
-      profile.carbRatio = document.getElementById('carbRatio').value;
-      
-      if (!profile.name || !profile.age || !profile.diabetesType) {
-        alert('اكتب الاسم والسن واختار نوع السكر على الأقل');
-        return;
-      }
-      
-      localStorage.setItem('diabetesProfile', JSON.stringify(profile));
-      checkOnboarding();
-    }
-
-    function showProfile() {
-      const typeText = profile.diabetesType === '1' ? 'نوع أول' : 'نوع تاني';
-      let insulinInfo = '';
-      if (profile.insulinType) {
-        insulinInfo = `<div class="badge insulin">${profile.insulinType}</div>`;
-      }
-      if (profile.carbRatio) {
-        insulinInfo += `<div class="badge carb">معامل: 1:${profile.carbRatio}</div>`;
-      }
-      
-      document.getElementById('profileData').innerHTML = `
-        <div class="badge">${profile.name}</div>
-        <div class="badge">${profile.age} سنة</div>
-        <div class="badge">${typeText}</div>
-        ${profile.weight ? `<div class="badge">${profile.weight} كجم</div>` : ''}
-        ${profile.a1c ? `<div class="badge">تراكمي: ${profile.a1c}%</div>` : ''}
-        ${insulinInfo}
-        ${profile.diagnosisDate ? `<div style="font-size:12px;color:#64748b;margin-top:8px">تاريخ التشخيص: ${profile.diagnosisDate}</div>` : ''}
-      `;
-    }
-
-    function editProfile() {
-      if(confirm('هتمسح البيانات وتسجل من الأول؟')) {
-        localStorage.removeItem('diabetesProfile');
-        location.reload();
-      }
-    }
-
-    function switchTab(tab) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      event.target.classList.add('active');
-      document.getElementById('tab-readings').classList.add('hidden');
-      document.getElementById('tab-chart').classList.add('hidden');
-      document.getElementById('tab-recipes').classList.add('hidden');
-      document.getElementById('tab-' + tab).classList.remove('hidden');
-      if (tab === 'chart') updateChart();
-    }
-
-    function getStatus(value, type) {
-      value = parseInt(value);
-      if (type === 'صايم' || type === 'قبل الأكل') {
-        if (value < 70) return 'low';
-        if (value > 130) return 'high';
-        return 'normal';
-      } else if (type === 'بعد الأكل بساعتين') {
-        if (value < 70) return 'low';
-        if (value > 180) return 'high';
-        return 'normal';
-      } else if (type === 'الفجر') {
-        if (value < 70) return 'low';
-        if (value > 140) return 'high';
-        return 'normal';
-      } else {
-        if (value < 70) return 'low';
-        if (value > 200) return 'high';
-        return 'normal';
-      }
-    }
-
-    function getStatusText(status) {
-      if (status === 'high') return 'عالي ⚠️';
-      if (status === 'low') return 'واطي ⚠️';
-      return 'طبيعي ✅';
-    }
-
-    function getTip(value, status, mealType, insulinDose) {
-      const isType1 = profile.diabetesType === '1';
-      const tipDiv = document.getElementById('tip');
-      let tipText = '';
-      
-      if (status === 'high') {
-        if (isType1 && profile.insulinType) {
-          if (profile.insulinType === 'سريع') {
-            tipText = '💡 سكر عالي: احسب جرعة تصحيح. اشرب مية كتير. لو أعلى من 250 قيس الأسيتون';
-          } else if (profile.insulinType === 'مخلوط') {
-            tipText = '💡 المخلوط مبيتصححش بجرعة إضافية. راجع أكلك واستنى معاد الجرعة الجاية';
-          } else {
-            tipText = '💡 راجع جرعة الأنسولين مع طبيبك. اشرب مية وتجنب الكارب';
-          }
-        } else {
-          tipText = '💡 نوع تاني: امشي 20-30 دقيقة. اشرب مية. قلل النشويات. راجع الدوا';
-        }
-        tipDiv.textContent = tipText;
-        tipDiv.classList.remove('hidden');
-      } else if (status === 'low') {
-        tipDiv.textContent = '💡 سكر واطي: خد 15 جم كربوهيدرات سريعة - نص كوب عصير أو 3 تمرات. قيس بعد 15 دقيقة';
-        tipDiv.classList.remove('hidden');
-      } else {
-        if (insulinDose && profile.carbRatio) {
-          const suggestedCarbs = insulinDose * parseInt(profile.carbRatio);
-          tipDiv.textContent = `💡 خدت ${insulinDose} وحدات. المفروض تاكل ~${suggestedCarbs} جم كارب حسب معامل الكارب بتاعك`;
-          tipDiv.classList.remove('hidden');
-        } else {
-          tipDiv.classList.add('hidden');
-        }
-      }
-    }
-
-    function addReading() {
-      const glucose = document.getElementById('glucose').value;
-      const insulinDose = document.getElementById('insulinDose').value;
-      const mealType = document.getElementById('mealType').value;
-      const notes = document.getElementById('notes').value;
-      
-      if (!glucose) {
-        alert('اكتب قياس السكر الأول');
-        return;
-      }
-
-      const status = getStatus(glucose, mealType);
-      getTip(glucose, status, mealType, insulinDose);
-
-      const readings = JSON.parse(localStorage.getItem('sugarReadings') || '[]');
-      readings.unshift({
-        id: Date.now(),
-        glucose: parseInt(glucose),
-        insulinDose: insulinDose ? parseInt(insulinDose) : null,
-        mealType,
-        notes,
-        date: new Date().toISOString(),
-        dateStr: new Date().toLocaleString('ar-EG'),
-        status: getStatusText(status)
-      });
-      
-      localStorage.setItem('sugarReadings', JSON.stringify(readings));
-      document.getElementById('glucose').value = '';
-      document.getElementById('insulinDose').value = '';
-      document.getElementById('notes').value = '';
-      showReadings();
-      updateChart();
-    }
-
-    function deleteReading(id) {
-      let readings = JSON.parse(localStorage.getItem('sugarReadings') || '[]');
-      readings = readings.filter(r => r.id !== id);
-      localStorage.setItem('sugarReadings', JSON.stringify(readings));
-      showReadings();
-      updateChart();
-    }
-
-    function showReadings() {
-      const readings = JSON.parse(localStorage.getItem('sugarReadings') || '[]');
-      const container = document.getElementById('readings');
-      
-      if (readings.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#64748b">لسه مفيش قياسات</p>';
-        return;
-      }
-
-      container.innerHTML = readings.slice(0, 15).map(r => {
-        const status = getStatus(r.glucose, r.mealType);
-        return `
-          <div class="reading">
+<body class="bg-gray-100 p-4">
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md p-6 mt-10">
+        <h1 class="text-2xl font-bold text-center text-blue-600 mb-6">أهلاً بيك في سُكري</h1>
+        
+        <div class="space-y-4">
             <div>
-              <div style="font-size:18px"><span class="${status}">${r.glucose}</span> mg/dL</div>
-              <div style="font-size:14px;color:#64748b">${r.mealType} • ${r.status}</div>
-              ${r.insulinDose ? `<div class="insulin-dose">💉 ${r.insulinDose} وحدة أنسولين</div>` : ''}
-              <div style="font-size:12px;color:#94a3b8">${r.notes || ''}</div>
-              <div style="font-size:11px;color:#cbd5e1">${r.dateStr}</div>
+                <label class="block text-sm font-medium mb-1">الاسم بالكامل *</label>
+                <input id="name" type="text" class="w-full p-3 border rounded-lg" placeholder="اكتب اسمك">
             </div>
-            <button class="delete" onclick="deleteReading(${r.id})">حذف</button>
-          </div>
-        `;
-      }).join('');
+            
+            <div>
+                <label class="block text-sm font-medium mb-1">السن *</label>
+                <input id="age" type="number" class="w-full p-3 border rounded-lg" placeholder="30">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium mb-1">الوزن كجم *</label>
+                <input id="weight" type="number" class="w-full p-3 border rounded-lg" placeholder="80">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-1">التراكمي HbA1c</label>
+                <input id="hba1c" type="number" step="0.1" class="w-full p-3 border rounded-lg" placeholder="7.5">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium mb-2">نوع السكر *</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="selectType('نوع أول')" id="type1" class="type-btn p-3 border rounded-lg text-sm">نوع أول</button>
+                    <button onclick="selectType('نوع تاني')" id="type2" class="type-btn p-3 border rounded-lg text-sm">نوع تاني</button>
+                </div>
+            </div>
+
+            <button onclick="saveData()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold mt-6">
+                حفظ الملف وابدأ
+            </button>
+        </div>
+    </div>
+
+<script>
+let selectedType = '';
+
+function selectType(type) {
+    selectedType = type;
+    document.querySelectorAll('.type-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-600', 'text-white');
+        btn.classList.add('bg-white');
+    });
+    event.target.classList.add('bg-blue-600', 'text-white');
+}
+
+function saveData() {
+    const name = document.getElementById('name').value.trim();
+    const age = document.getElementById('age').value;
+    const weight = document.getElementById('weight').value;
+    const hba1c = document.getElementById('hba1c').value;
+
+    if (!name || !age || !weight || !selectedType) {
+        alert('لازم تملا كل الخانات اللي عليها * وتختار نوع السكر');
+        return;
     }
 
-    function updateChart() {
-      const readings = JSON.parse(localStorage.getItem('sugarReadings') || '[]');
-      const last7Days = readings.filter(r => {
-        const date = new Date(r.date);
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        return date >= weekAgo;
-      }).reverse();
+    const userData = {
+        name: name,
+        age: age,
+        weight: weight,
+        hba1c: hba1c,
+        type: selectedType
+    };
 
-      const ctx = document.getElementById('sugarChart');
-      if (!ctx) return;
-
-      if (sugarChart) sugarChart.destroy();
-
-      sugarChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: last7Days.map(r => new Date(r.date).toLocaleDateString('ar-EG', {month:'short', day:'numeric'})),
-          datasets: [{
-            label: 'قياس السكر',
-            data: last7Days.map(r => r.glucose),
-            borderColor: '#0ea5e9',
-            backgroundColor: 'rgba(14, 165, 233, 0.1)',
-            tension: 0.3,
-            fill: true
-          }, {
-            label: 'الحد الطبيعي الأعلى',
-            data: new Array(last7Days.length).fill(180),
-            borderColor: '#ef4444',
-            borderDash: [5, 5],
-            pointRadius: 0
-          }, {
-            label: 'الحد الطبيعي الأدنى',
-            data: new Array(last7Days.length).fill(70),
-            borderColor: '#ea580c',
-            borderDash: [5, 5],
-            pointRadius: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          plugins: {
-            legend: { display: true, position: 'bottom' }
-          },
-          scales: {
-            y: { beginAtZero: false, min: 40, max: 400 }
-          }
-        }
-      });
-
-      // 
+    localStorage.setItem('userProfile', JSON.stringify(userData));
+    alert('تم حفظ البيانات بنجاح');
+    window.location.href = 'home.html';
+}
+</script>
+</body>
+</html>
